@@ -206,7 +206,7 @@ const initialEdges: Edge[] = [
 ]
 
 export default function App () {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
+  const [nodes, _, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
   const onConnect = useCallback(
