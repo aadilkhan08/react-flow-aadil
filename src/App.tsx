@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
   ReactFlow,
   Background,
@@ -10,7 +10,8 @@ import {
   type Connection,
   type Edge,
   type Node,
-  MarkerType
+  MarkerType,
+  Panel
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import './App.css'
@@ -26,82 +27,80 @@ const edgeTypes = {
   custom: CustomEdge
 }
 
+const nodeTemplates = [
+  { label: 'Trigger', icon: '▶️', color: '#ff6b6b', category: 'Core' },
+  { label: 'HTTP Request', icon: '🌐', color: '#4ecdc4', category: 'Core' },
+  { label: 'Webhook', icon: '🔔', color: '#95e1d3', category: 'Core' },
+  { label: 'Gmail', icon: '📧', color: '#ea4335', category: 'Communication' },
+  { label: 'Slack', icon: '💬', color: '#4a154b', category: 'Communication' },
+  {
+    label: 'Google Sheets',
+    icon: '📊',
+    color: '#34a853',
+    category: 'Productivity'
+  },
+  { label: 'OpenAI', icon: '🤖', color: '#10a37f', category: 'AI' },
+  { label: 'Database', icon: '🗄️', color: '#5f27cd', category: 'Data' },
+  { label: 'Code', icon: '⚡', color: '#feca57', category: 'Core' },
+  { label: 'Filter', icon: '🔍', color: '#48dbfb', category: 'Core' },
+  { label: 'Schedule', icon: '⏰', color: '#ff9ff3', category: 'Core' },
+  { label: 'Transform', icon: '🔄', color: '#54a0ff', category: 'Data' }
+]
+
 const initialNodes: Node[] = [
   {
     id: '1',
     type: 'custom',
-    position: { x: 250, y: 50 },
+    position: { x: 300, y: 100 },
     data: {
-      label: 'Pathshala Hub',
-      description: 'Sign up & create account',
-      icon: '👤',
-      color: '#8b5cf6'
+      label: 'Trigger',
+      description: 'When workflow starts',
+      icon: '▶️',
+      color: '#ff6b6b'
     }
   },
   {
     id: '2',
     type: 'custom',
-    position: { x: 100, y: 200 },
+    position: { x: 300, y: 250 },
     data: {
-      label: 'Email Verification',
-      description: 'Confirm email address',
-      icon: '✉️',
-      color: '#3b82f6'
+      label: 'HTTP Request',
+      description: 'Make API call',
+      icon: '🌐',
+      color: '#4ecdc4'
     }
   },
   {
     id: '3',
     type: 'custom',
-    position: { x: 400, y: 200 },
+    position: { x: 300, y: 400 },
     data: {
-      label: 'Profile Setup',
-      description: 'Complete user profile',
-      icon: '⚙️',
-      color: '#06b6d4'
+      label: 'OpenAI',
+      description: 'Process with AI',
+      icon: '🤖',
+      color: '#10a37f'
     }
   },
   {
     id: '4',
     type: 'custom',
-    position: { x: 250, y: 350 },
+    position: { x: 100, y: 550 },
     data: {
-      label: 'Dashboard Access',
-      description: 'View analytics & data',
-      icon: '📊',
-      color: '#10b981'
+      label: 'Gmail',
+      description: 'Send email',
+      icon: '�',
+      color: '#ea4335'
     }
   },
   {
     id: '5',
     type: 'custom',
-    position: { x: 100, y: 500 },
+    position: { x: 500, y: 550 },
     data: {
-      label: 'Payment Setup',
-      description: 'Add payment method',
-      icon: '💳',
-      color: '#f59e0b'
-    }
-  },
-  {
-    id: '6',
-    type: 'custom',
-    position: { x: 400, y: 500 },
-    data: {
-      label: 'Subscription',
-      description: 'Choose plan & subscribe',
-      icon: '⭐',
-      color: '#ec4899'
-    }
-  },
-  {
-    id: '7',
-    type: 'custom',
-    position: { x: 250, y: 650 },
-    data: {
-      label: 'Full Access',
-      description: 'All features unlocked',
-      icon: '🚀',
-      color: '#6366f1'
+      label: 'Slack',
+      description: 'Send message',
+      icon: '�',
+      color: '#4a154b'
     }
   }
 ]
@@ -115,33 +114,21 @@ const initialEdges: Edge[] = [
     animated: true,
     markerEnd: {
       type: MarkerType.ArrowClosed,
-      color: '#3b82f6'
+      color: '#64748b'
     },
-    data: { label: 'Send email', color: '#3b82f6' }
+    data: { color: '#64748b' }
   },
   {
-    id: 'e1-3',
-    source: '1',
+    id: 'e2-3',
+    source: '2',
     target: '3',
     type: 'custom',
     animated: true,
     markerEnd: {
       type: MarkerType.ArrowClosed,
-      color: '#06b6d4'
+      color: '#64748b'
     },
-    data: { label: 'Continue', color: '#06b6d4' }
-  },
-  {
-    id: 'e2-4',
-    source: '2',
-    target: '4',
-    type: 'custom',
-    animated: true,
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: '#10b981'
-    },
-    data: { label: 'Verified', color: '#10b981' }
+    data: { color: '#64748b' }
   },
   {
     id: 'e3-4',
@@ -151,63 +138,29 @@ const initialEdges: Edge[] = [
     animated: true,
     markerEnd: {
       type: MarkerType.ArrowClosed,
-      color: '#10b981'
+      color: '#64748b'
     },
-    data: { label: 'Complete', color: '#10b981' }
+    data: { color: '#64748b' }
   },
   {
-    id: 'e4-5',
-    source: '4',
+    id: 'e3-5',
+    source: '3',
     target: '5',
     type: 'custom',
     animated: true,
     markerEnd: {
       type: MarkerType.ArrowClosed,
-      color: '#f59e0b'
+      color: '#64748b'
     },
-    data: { label: 'Add payment', color: '#f59e0b' }
-  },
-  {
-    id: 'e4-6',
-    source: '4',
-    target: '6',
-    type: 'custom',
-    animated: true,
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: '#ec4899'
-    },
-    data: { label: 'Choose plan', color: '#ec4899' }
-  },
-  {
-    id: 'e5-7',
-    source: '5',
-    target: '7',
-    type: 'custom',
-    animated: true,
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: '#6366f1'
-    },
-    data: { label: 'Activate', color: '#6366f1' }
-  },
-  {
-    id: 'e6-7',
-    source: '6',
-    target: '7',
-    type: 'custom',
-    animated: true,
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      color: '#6366f1'
-    },
-    data: { label: 'Subscribe', color: '#6366f1' }
+    data: { color: '#64748b' }
   }
 ]
 
 export default function App () {
-  const [nodes, _, onNodesChange] = useNodesState(initialNodes)
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [selectedCategory, setSelectedCategory] = useState('All')
 
   const onConnect = useCallback(
     (params: Connection) =>
@@ -218,7 +171,8 @@ export default function App () {
             type: 'custom',
             animated: true,
             markerEnd: {
-              type: MarkerType.ArrowClosed
+              type: MarkerType.ArrowClosed,
+              color: '#64748b'
             }
           },
           eds
@@ -229,38 +183,144 @@ export default function App () {
 
   const proOptions = useMemo(() => ({ hideAttribution: true }), [])
 
+  const onDragStart = (
+    event: React.DragEvent,
+    nodeData: typeof nodeTemplates[0]
+  ) => {
+    event.dataTransfer.setData(
+      'application/reactflow',
+      JSON.stringify(nodeData)
+    )
+    event.dataTransfer.effectAllowed = 'move'
+  }
+
+  const onDrop = useCallback(
+    (event: React.DragEvent) => {
+      event.preventDefault()
+      const data = event.dataTransfer.getData('application/reactflow')
+      if (!data) return
+
+      const nodeData = JSON.parse(data)
+      const position = { x: event.clientX - 100, y: event.clientY - 50 }
+
+      const newNode: Node = {
+        id: `${Date.now()}`,
+        type: 'custom',
+        position,
+        data: {
+          label: nodeData.label,
+          description: 'Configure this node',
+          icon: nodeData.icon,
+          color: nodeData.color
+        }
+      }
+
+      setNodes(nds => nds.concat(newNode))
+    },
+    [setNodes]
+  )
+
+  const onDragOver = useCallback((event: React.DragEvent) => {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'move'
+  }, [])
+
+  const categories = ['All', ...new Set(nodeTemplates.map(n => n.category))]
+  const filteredNodes =
+    selectedCategory === 'All'
+      ? nodeTemplates
+      : nodeTemplates.filter(n => n.category === selectedCategory)
+
   return (
-    <div style={{ width: '100vw', height: '100vh', background: '#f8fafc' }}>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        proOptions={proOptions}
-        fitView
-        fitViewOptions={{ padding: 0.2 }}
-        minZoom={0.5}
-        maxZoom={1.5}
-        defaultEdgeOptions={{
-          type: 'custom',
-          animated: true
-        }}
+    <div className='n8n-container'>
+      <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+        <div className='sidebar-header'>
+          <h2>Nodes</h2>
+          <button
+            className='sidebar-toggle'
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+          >
+            {sidebarOpen ? '◀' : '▶'}
+          </button>
+        </div>
+        {sidebarOpen && (
+          <>
+            <div className='category-tabs'>
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  className={`category-tab ${
+                    selectedCategory === cat ? 'active' : ''
+                  }`}
+                  onClick={() => setSelectedCategory(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+            <div className='node-list'>
+              {filteredNodes.map((node, idx) => (
+                <div
+                  key={idx}
+                  className='node-item'
+                  draggable
+                  onDragStart={e => onDragStart(e, node)}
+                  style={{ borderLeft: `3px solid ${node.color}` }}
+                >
+                  <span className='node-icon'>{node.icon}</span>
+                  <div className='node-info'>
+                    <div className='node-name'>{node.label}</div>
+                    <div className='node-category'>{node.category}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
+      <div
+        className='canvas-container'
+        style={{ marginLeft: sidebarOpen ? '280px' : '50px' }}
       >
-        <Background color='#94a3b8' gap={16} />
-        <Controls />
-        <MiniMap
-          nodeColor={node => {
-            const data = node.data as { color?: string }
-            return data.color || '#6366f1'
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          onDrop={onDrop}
+          onDragOver={onDragOver}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          proOptions={proOptions}
+          fitView
+          fitViewOptions={{ padding: 0.2 }}
+          minZoom={0.3}
+          maxZoom={2}
+          defaultEdgeOptions={{
+            type: 'custom',
+            animated: true
           }}
-          nodeStrokeWidth={3}
-          zoomable
-          pannable
-        />
-      </ReactFlow>
+        >
+          <Background color='#374151' gap={20} size={2} />
+          <Controls />
+          <MiniMap
+            nodeColor={node => {
+              const data = node.data as { color?: string }
+              return data.color || '#6366f1'
+            }}
+            nodeStrokeWidth={3}
+            zoomable
+            pannable
+            className='n8n-minimap'
+          />
+          <Panel position='top-right' className='workflow-controls'>
+            <button className='control-btn'>▶ Execute</button>
+            <button className='control-btn'>💾 Save</button>
+          </Panel>
+        </ReactFlow>
+      </div>
     </div>
   )
 }
